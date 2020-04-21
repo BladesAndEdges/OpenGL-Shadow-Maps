@@ -191,9 +191,6 @@ void RenderWidget::initializeGL()
 	/*Initalizes openGL functions in QT ( Most likely simply loads up all the function pointers)*/
 	initializeOpenGLFunctions();
 
-	std::string path = "Textures/Eagle.png";
-	m_eagleTexture = new TextureObject(path, GL_NEAREST);
-
 	/*This functions was created to see information about Versions used*/
 	//getOpenGLInformation();
 
@@ -246,8 +243,7 @@ void RenderWidget::paintGL()
 	glClearColor(1.0f, 0.5f, 0.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	///*The shadow map*/
-
+	/*Create an empty 512 x 512 texture, to store the Shadow Map*/
 	glGenTextures(1, &m_shadowMapTexture);
 	glBindTexture(GL_TEXTURE_2D, m_shadowMapTexture);
 
@@ -258,26 +254,37 @@ void RenderWidget::paintGL()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
+	/*Attach the texture to the framebuffer object*/
 	glBindFramebuffer(GL_FRAMEBUFFER, m_shadowMapFramebuffer);
 	glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, m_shadowMapTexture, 0);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
+	/*Change the viewport to match the shadow map resolution, for when rendering from the Light Source's view*/
 	glViewport(0, 0, 512, 512);
+
+	/*Bind the Framebuffer and copy over whatever gets stored in the Depth attachment of the framebuffer into the Shadow Map*/
 	glBindFramebuffer(GL_FRAMEBUFFER, m_shadowMapFramebuffer);
 	glClear(GL_DEPTH_BUFFER_BIT);
 	renderSceneObjects(*m_shadowCameraView, *m_shadowCameraView);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
+	/*Qt has it's own default framebuffer created when PaintGL is called. Use that framebuffer for rendering now*/
 	glBindFramebuffer(GL_FRAMEBUFFER, this->defaultFramebufferObject());
 
 	glClearColor(1.0f, 0.5f, 0.0f, 1.0f);
+
+	/*It is important to clear the screen from the previous render, otherwise the screen would be filled with meshes rendered from both view points*/
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 
 	glViewport(0, 0, m_mainCameraView->getCameraWidth(), m_mainCameraView->getCameraHeight());
+
+	/*Bind the Shadow Map so we can project it onto the scene*/
 	glBindTexture(GL_TEXTURE_2D, m_shadowMapTexture);
+
 	renderSceneObjects(*m_mainCameraView, *m_shadowCameraView);
 
+	/*The debugging Shader allows us to always have the shadow map visible when the program runs*/
 	m_debuggingShader.useShader();
 	glBindTexture(GL_TEXTURE_2D, m_shadowMapTexture);
 	glBindVertexArray(m_debugQuadMesh->m_meshVAO);
@@ -336,6 +343,16 @@ RenderWidget::~RenderWidget()
 {
 	glDeleteVertexArrays(1, &m_floorMesh->m_meshVAO);
 	glDeleteBuffers(1, &m_floorMesh->m_meshVBO);
+
+	delete m_debugQuadMesh;
+	delete m_floorMesh;
+	delete m_wallMesh;
+	delete m_cubeMesh;
+
+	delete m_mainCameraView;
+	delete m_shadowCameraView;
+
+	delete m_surfaceFormat;
 }
 
 CameraView * RenderWidget::getCameraViewObject() const

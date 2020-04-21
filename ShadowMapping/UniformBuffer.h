@@ -3,7 +3,7 @@
 #include <qmatrix4x4.h>
 
 /*The uniform buffer struct which holds our transformation matrices. Both for the main view and the lightSpace matrix*/
-struct ubo
+struct UniformBuffer
 {
 	float model[16];
 	float viewProjection[16];

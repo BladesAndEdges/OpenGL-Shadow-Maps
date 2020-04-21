@@ -18,7 +18,8 @@ Window::Window()
 
 Window::~Window()
 {
-	delete(m_windowLayout);
+	delete m_renderWidgetInstance;
+	delete m_windowLayout;
 }
 
 RenderWidget * Window::getRenderWidgetInstance() const

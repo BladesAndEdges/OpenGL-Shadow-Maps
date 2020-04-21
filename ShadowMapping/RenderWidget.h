@@ -48,8 +48,6 @@ private:
 	Mesh* m_wallMesh;
 	Mesh* m_cubeMesh;
 
-	TextureObject* m_eagleTexture;
-
 	void catchOpenGLError(GLenum errorCode);
 	void getOpenGLInformation();
 	void renderSceneObjects(const CameraView& cameraView, const CameraView& shadowViewMap);

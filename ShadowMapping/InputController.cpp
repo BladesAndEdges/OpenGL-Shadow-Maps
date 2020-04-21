@@ -9,6 +9,7 @@ InputController::InputController(Window * window) : m_windowWidget(window), m_mo
 	m_cameraObject = m_windowWidget->getCameraViewInstance();
 }
 
+
 /*Filters the type of event being sent to the widget which holds the focus*/
 bool InputController::eventFilter(QObject * object, QEvent * theEvent)
 {
