@@ -17,8 +17,8 @@ TextureObject::TextureObject(const std::string& file, GLint param) {
 	glformat = QGLWidget::convertToGLFormat(img);
 
 	//Generate name/id
-	glGenTextures(1, &textureID);
-	glBindTexture(GL_TEXTURE_2D, textureID);
+	glGenTextures(1, &m_textureID);
+	glBindTexture(GL_TEXTURE_2D, m_textureID);
 
 	//Apply texture
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, glformat.width(), glformat.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, glformat.bits());
@@ -34,17 +34,17 @@ TextureObject::TextureObject(const std::string& file, GLint param) {
 
 //Destructor(???) test
 TextureObject::~TextureObject() {
-	glDeleteTextures(1, &textureID);
+	glDeleteTextures(1, &m_textureID);
 }
 
-unsigned int TextureObject::getWidth() {
+unsigned int TextureObject::getTextureWidth() {
 	return m_textureWidth;
 }
 
-unsigned int TextureObject::getHeight() {
-	return height;
+unsigned int TextureObject::getTextureHeight() {
+	return m_textureHeight;
 }
 
 void TextureObject::setActiveTexture() {
-	glBindTexture(GL_TEXTURE_2D, textureID);
+	glBindTexture(GL_TEXTURE_2D, m_textureID);
 }

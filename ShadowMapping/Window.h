@@ -4,25 +4,21 @@
 
 #include "RenderWidget.h"
 
-/*A big portion of how to set up proper debugging using Qt5 was referenced from https://www.trentreed.net/blog/qt5-opengl-part-5-debug-logging/ */
-class QOpenGLDebugMessage;
-class QOpenGLDebugLogger;
-
-
+/*Main window class*/
 class Window : public QWidget
 {
 
 private:
 
-	QGridLayout* layout;
-	RenderWidget* renderWidget;
+	QGridLayout* m_windowLayout;
+	RenderWidget* m_renderWidgetInstance;
 
 public:
 
 	Window::Window();
 	~Window();
 
-	RenderWidget* getRenderWidget() const;
-	CameraView* getCameraOFRenderWidget() const;
+	RenderWidget* getRenderWidgetInstance() const;
+	CameraView* getCameraViewInstance() const;
 };
 

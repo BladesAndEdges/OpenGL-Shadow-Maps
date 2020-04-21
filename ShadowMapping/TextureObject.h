@@ -19,9 +19,9 @@ class TextureObject : protected QOpenGLFunctions_4_5_Core
 private:
 
 	GLuint m_textureWidth;
-	GLuint height;
+	GLuint m_textureHeight;
 
-	GLuint textureID;
+	GLuint m_textureID;
 
 public:
 
@@ -31,6 +31,6 @@ public:
 
 	void setActiveTexture();
 
-	GLuint getWidth();
-	GLuint getHeight();
+	GLuint getTextureWidth();
+	GLuint getTextureHeight();
 };

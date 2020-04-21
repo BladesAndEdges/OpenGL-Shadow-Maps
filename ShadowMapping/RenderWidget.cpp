@@ -73,7 +73,7 @@ void RenderWidget::renderSceneObjects(const CameraView& cameraView, const Camera
 
 	QMatrix4x4 lightSpaceMatrix = lightProjection * lightView;
 
-	copyMatrixIntoFloatArray(lightSpaceMatrix, uniformBuffer.lightSpaceMatrix);
+	copyMatrix4x4ToFloat16Array(lightSpaceMatrix, uniformBuffer.lightSpaceMatrix);
 
 	/****************************************************************************************************************************************/
 
@@ -89,9 +89,9 @@ void RenderWidget::renderSceneObjects(const CameraView& cameraView, const Camera
 	QMatrix4x4 viewProjection = projection * view;
 
 	/*Copy over the data into a valid buffer*/
-	copyMatrixIntoFloatArray(model, uniformBuffer.model);
-	copyMatrixIntoFloatArray(viewProjection, uniformBuffer.viewProjection);
-	copyVector4IntoFloatArray(lightDirection, uniformBuffer.toLightDirection);
+	copyMatrix4x4ToFloat16Array(model, uniformBuffer.model);
+	copyMatrix4x4ToFloat16Array(viewProjection, uniformBuffer.viewProjection);
+	copyVector4ToFloat4Array(lightDirection, uniformBuffer.toLightDirection);
 
 	m_shadowMappingShader.useShader();
 
@@ -106,7 +106,7 @@ void RenderWidget::renderSceneObjects(const CameraView& cameraView, const Camera
 	/*Wall*/
 	model.setToIdentity();
 	model.translate(QVector3D(0.0f, 0.0f, -20.0f));
-	copyMatrixIntoFloatArray(model, uniformBuffer.model);
+	copyMatrix4x4ToFloat16Array(model, uniformBuffer.model);
 
 	glBindBuffer(GL_UNIFORM_BUFFER, m_uniformBuffer);
 	glBufferData(GL_UNIFORM_BUFFER, sizeof(ubo), &uniformBuffer, GL_STATIC_DRAW);
@@ -138,7 +138,7 @@ void RenderWidget::renderSceneObjects(const CameraView& cameraView, const Camera
 		model.setToIdentity();
 		model.scale(0.5f, 0.5f, 0.5f);
 		model.translate(cubeTranslationVectors[cube]);
-		copyMatrixIntoFloatArray(model, uniformBuffer.model);
+		copyMatrix4x4ToFloat16Array(model, uniformBuffer.model);
 
 		glBindBuffer(GL_UNIFORM_BUFFER, m_uniformBuffer);
 		glBufferData(GL_UNIFORM_BUFFER, sizeof(ubo), &uniformBuffer, GL_STATIC_DRAW);
