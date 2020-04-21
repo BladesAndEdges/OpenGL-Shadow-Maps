@@ -7,27 +7,27 @@ Window::Window()
 	resize(1200, 800);
 
 	//The layout of our window. It will only contain a single RenderWidget in it
-	layout = new QGridLayout();
+	m_windowLayout = new QGridLayout();
 
-	renderWidget = new RenderWidget();
-	layout->addWidget(renderWidget, 0, 0);
+	m_renderWidgetInstance = new RenderWidget();
+	m_windowLayout->addWidget(m_renderWidgetInstance, 0, 0);
 
 
 
-	setLayout(layout);
+	setLayout(m_windowLayout);
 }
 
 Window::~Window()
 {
-	delete(layout);
+	delete(m_windowLayout);
 }
 
-RenderWidget * Window::getRenderWidget() const
+RenderWidget * Window::getRenderWidgetInstance() const
 {
-	return renderWidget;
+	return m_renderWidgetInstance;
 }
 
-CameraView * Window::getCameraOFRenderWidget() const
+CameraView * Window::getCameraViewInstance() const
 {
-	return renderWidget->getCameraViewObject();
+	return m_renderWidgetInstance->getCameraViewObject();
 }

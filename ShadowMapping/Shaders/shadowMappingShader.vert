@@ -33,6 +33,7 @@ void main()
 
 	texCoord = inTexCoord;
 
+	/*Gets the same fragment in lgiht space clip cooridnates (NOT NORMALIZED CLUP COORDINATES)*/
 	fragPositionInLightSpace = lightSpaceMatrix * model * vec4(inPosition, 1.0f);
 
 

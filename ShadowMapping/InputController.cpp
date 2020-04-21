@@ -6,7 +6,7 @@
 
 InputController::InputController(Window * window) : m_windowWidget(window), m_mouseIsPressed(false)
 {
-	m_cameraObject = m_windowWidget->getCameraOFRenderWidget();
+	m_cameraObject = m_windowWidget->getCameraViewInstance();
 }
 
 bool InputController::eventFilter(QObject * object, QEvent * theEvent)
@@ -16,24 +16,24 @@ bool InputController::eventFilter(QObject * object, QEvent * theEvent)
 	{
 		return false;
 	}
-	else if (object == m_windowWidget->getRenderWidget() && theEvent->type() == QEvent::KeyPress)
+	else if (object == m_windowWidget->getRenderWidgetInstance() && theEvent->type() == QEvent::KeyPress)
 	{
 		keyPressEvent(static_cast<QKeyEvent*>(theEvent));
 		return false;
 	}
-	else if (object == m_windowWidget->getRenderWidget() && theEvent->type() == QEvent::MouseButtonPress)
+	else if (object == m_windowWidget->getRenderWidgetInstance() && theEvent->type() == QEvent::MouseButtonPress)
 	{
 		mousePressEvent(static_cast<QMouseEvent*>(theEvent));
 		return false;
 
 	}
-	else if (object == m_windowWidget->getRenderWidget() && theEvent->type() == QEvent::MouseButtonRelease)
+	else if (object == m_windowWidget->getRenderWidgetInstance() && theEvent->type() == QEvent::MouseButtonRelease)
 	{
 		mouseReleaseEvent(static_cast<QMouseEvent*>(theEvent));
 		return false;
 
 	}
-	else if (object == m_windowWidget->getRenderWidget() && theEvent->type() == QEvent::MouseMove)
+	else if (object == m_windowWidget->getRenderWidgetInstance() && theEvent->type() == QEvent::MouseMove)
 	{
 		mouseMoveEvent(static_cast<QMouseEvent*>(theEvent));
 		return false;
@@ -100,7 +100,7 @@ void InputController::keyPressEvent(QKeyEvent * keyEvent)
 	QVector3D newCameraPosition = currentPosition + translation;
 	m_cameraObject->setCameraWorldPosition(newCameraPosition);
 
-	m_windowWidget->getRenderWidget()->repaint();
+	m_windowWidget->getRenderWidgetInstance()->repaint();
 }
 
 void InputController::mousePressEvent(QMouseEvent * mousePressEvent)
@@ -152,7 +152,7 @@ void InputController::mouseMoveEvent(QMouseEvent * mouseMoveEvent)
 		m_cameraObject->setCameraOrientation(updatedCameraOrientation);
 
 		/*Update the screen*/
-		m_windowWidget->getRenderWidget()->repaint();
+		m_windowWidget->getRenderWidgetInstance()->repaint();
 
 		m_previousXCoordinate = newPositionInX;
 		m_previousYCoordinate = newPositionInY;

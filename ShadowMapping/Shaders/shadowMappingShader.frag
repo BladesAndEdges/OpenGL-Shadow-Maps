@@ -1,5 +1,9 @@
 #version 450
 
+
+// Simply put, this shader implements the shadow mapping technique, and simple Phong lighting. 
+// Specular lighting was ignored, since I tought it was not neccessary if the light never moves place. 
+
 in vec3 surfaceColour;
 in vec3 normalizedNormalInWorldSpace;
 in vec2 texCoord;
@@ -26,15 +30,17 @@ void main()
 	const vec3 normalizedFragPosition = fragPositionInLightSpace.xyz / fragPositionInLightSpace.w;
 
 	/*Gets a shadow map coordinate, within [0,1]*/
-	float testValue = (normalizedFragPosition.z * 0.5) + 0.5;
+	float fragmentDepth = (normalizedFragPosition.z * 0.5) + 0.5;
 	const vec2 shadowMapTexCoord = (normalizedFragPosition.xy * 0.5) + 0.5;
 
-	const float biasValue = 0.0005f;
+	/*A bias value is used for ???*/
+	const float biasValue = 0.005f;
+
 	/*Sample the shadow map, using the value in xy*/
 	const float depthStored = texture(shadowMap, shadowMapTexCoord.xy).r + biasValue;
 
 	/*Check if the fragment is in shadow or not, by comparing the value stored in the shadow map is less than the z value of the fragment*/
-	const float isShadowed = depthStored > testValue ? 1.0f : 0.0f;
+	const float isShadowed = depthStored > fragmentDepth ? 1.0f : 0.0f;
 
 	/*White light*/
 	const vec3 lightColour = vec3(1.0f, 1.0f, 1.0f);
@@ -55,7 +61,8 @@ void main()
 	/*The diffuse lighting*/
 	vec3 diffuseTerm = diffuseDotProduct * surfaceColour;
 
-	vec3 col;
 
+	/*The final colour is determined by weather the fragment is in shadow or not*/
+	/*If it is in shadow, it will get multiplied by vec3(0.0f, 0.0f, 0.0f) and appear fully black*/
 	outputColour = isShadowed * (ambientTerm + diffuseTerm);
 }
