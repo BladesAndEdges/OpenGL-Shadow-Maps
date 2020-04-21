@@ -11,20 +11,18 @@ TextureObject::TextureObject(const std::string& file, GLint param) {
 
 	initializeOpenGLFunctions();
 
-	//If file could not be loaded
-
-	//Convert to accepted GL format
+	/*Qt expects data in a certain format*/
 	glformat = QGLWidget::convertToGLFormat(img);
 
-	//Generate name/id
+	/*Generate texture object*/
 	glGenTextures(1, &m_textureID);
 	glBindTexture(GL_TEXTURE_2D, m_textureID);
 
-	//Apply texture
+	/*Retrieve data*/
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, glformat.width(), glformat.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, glformat.bits());
 
 
-	//Wrap modes, min-mag filter
+	/*Texture paramaters*/
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, param);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, param);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -32,7 +30,6 @@ TextureObject::TextureObject(const std::string& file, GLint param) {
 
 }
 
-//Destructor(???) test
 TextureObject::~TextureObject() {
 	glDeleteTextures(1, &m_textureID);
 }

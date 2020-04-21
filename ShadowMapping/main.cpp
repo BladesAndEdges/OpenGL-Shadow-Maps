@@ -24,5 +24,6 @@ int main(int argc, char* argv[])
 
 	window->show();
 
+	/*Starts up the main Qt loop*/
 	return app.exec();
 }

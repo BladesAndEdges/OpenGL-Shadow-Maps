@@ -9,6 +9,7 @@ InputController::InputController(Window * window) : m_windowWidget(window), m_mo
 	m_cameraObject = m_windowWidget->getCameraViewInstance();
 }
 
+/*Filters the type of event being sent to the widget which holds the focus*/
 bool InputController::eventFilter(QObject * object, QEvent * theEvent)
 {
 
@@ -45,14 +46,17 @@ bool InputController::eventFilter(QObject * object, QEvent * theEvent)
 
 void InputController::keyPressEvent(QKeyEvent * keyEvent)
 {
+	/*Get the current position*/
 	QVector3D currentPosition = m_cameraObject->getCameraWorldPosition();
-	QVector3D translation = QVector3D(0.0f, 0.0f, 0.f);
+	QVector3D translation = QVector3D(0.0f, 0.0f, 0.0f);
 
+	/*The coordinate frame vectors (?)*/
 	QVector3D rightwardVector = QVector3D(1.0f, 0.0f, 0.0f);
 	QVector3D upwardVector = QVector3D(0.0f, 1.0f, 0.0f);
 	QVector3D forwardVector = QVector3D(0.0f, 0.0f, 1.0f);
 	const float cameraSpeed = 0.1f;
 
+	/*Extract the current orientation. We don't care about Rolling, so we just get the pitch and yaw*/
 	float currentPitchAngle = m_cameraObject->getCameraOrientation().getPitchAngle();
 	float currentYawAngle = m_cameraObject->getCameraOrientation().getYawAngle();
 
@@ -92,7 +96,6 @@ void InputController::keyPressEvent(QKeyEvent * keyEvent)
 	//accountForPitchRotation.rotate(-currentPitchAngle, QVector3D(1.0f, 0.0f, 0.0f)); // This part doesn't work, figure out why
 	accountForYawRotation.rotate(currentYawAngle, QVector3D(0.0f, 1.0f, 0.0f));
 
-
 	translation = accountForPitchRotation * accountForYawRotation * translation;
 
 	/*Since the above translation is set up for the CameraObject, corresponding matrix,
@@ -110,6 +113,7 @@ void InputController::mousePressEvent(QMouseEvent * mousePressEvent)
 		m_mouseIsPressed = true;
 	}
 
+	/*Record the cursor position*/
 	m_previousXCoordinate = mousePressEvent->pos().x();
 	m_previousYCoordinate = mousePressEvent->pos().y();
 }

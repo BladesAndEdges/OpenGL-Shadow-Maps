@@ -8,13 +8,14 @@ CameraView::CameraView()
 }
 
 CameraView::CameraView(const QVector3D& position, const Orientation& orientation, const ProjectionType& projectionType,
-	float width, float height, float near, float far) : m_cameraWorldPosition(position),
-	m_cameraOrientation(orientation),
-	m_cameraProjectionType(projectionType),
-	m_cameraWidth(width),
-	m_cameraHeight(height),
-	m_cameraNearPlane(near),
-	m_cameraFarPlane(far)
+							float width, float height, float near, float far) 
+							: m_cameraWorldPosition(position),
+							  m_cameraOrientation(orientation),
+							  m_cameraProjectionType(projectionType),
+							  m_cameraWidth(width),
+							  m_cameraHeight(height),
+							  m_cameraNearPlane(near),
+							  m_cameraFarPlane(far)
 
 
 
@@ -66,22 +67,6 @@ float CameraView::getCameraFarPlane() const
 {
 	return m_cameraFarPlane;
 }
-
-//QMatrix4x4 computeARotationMatrixAroundXAxis(float pitchAngleInRadians)
-//{
-//	return QMatrix4x4(	1.0f,	 0.0f,							0.0f,						0.0f, 
-//						0.0f,	 cosf(pitchAngleInRadians),	-sinf(pitchAngleInRadians),		0.0f, 
-//						0.0f,	sinf(pitchAngleInRadians),	cosf(pitchAngleInRadians),		0.0f,
-//						0.0f,	 0.0f,						 0.0f,							1.0f);
-//}
-//
-//QMatrix4x4 computeARotationMatrixAroundYAxis(float yawAngleInRadians)
-//{
-//	return QMatrix4x4(cosf(yawAngleInRadians), 0.0f, sinf(yawAngleInRadians), 0.0f,
-//		0.0f, 1.0f, 0.0f, 0.0f,
-//		-sinf(yawAngleInRadians),  0.0f, cosf(yawAngleInRadians), 0.0f,
-//		0.0f, 0.0f, 0.0f, 1.0f);
-//}
 
 Orientation calculateShadowMapViewOrientation(const QVector4D & lightDirection)
 {

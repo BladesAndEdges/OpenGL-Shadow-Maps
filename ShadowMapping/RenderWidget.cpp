@@ -8,8 +8,8 @@
 
 //Math stuff
 #include <qmatrix4x4.h>
-const QVector3D worldUpVector(0.0f, 1.0f, 0.0f);
-const QVector4D lightDirection(1.0f, 1.0f, 1.0f, 0.0f);
+const QVector3D g_worldUpVector(0.0f, 1.0f, 0.0f);
+const QVector4D g_toLightDirectionVector(1.0f, 1.0f, 1.0f, 0.0f);
 
 /*Opengl function which will record error's returned by the API and output an error*/
 void RenderWidget::catchOpenGLError(GLenum error)
@@ -50,6 +50,7 @@ void RenderWidget::getOpenGLInformation()
 
 }
 
+/*Since Shadow Mapping renders the scene from two separate view points, it makes sense to have a single function build the entire scene*/
 void RenderWidget::renderSceneObjects(const CameraView& cameraView, const CameraView& shadowMapView)
 {
 	const QVector3D worldUp(0.0f, 1.0f, 0.0f);
@@ -61,13 +62,9 @@ void RenderWidget::renderSceneObjects(const CameraView& cameraView, const Camera
 	QMatrix4x4 lightView;
 	QMatrix4x4 lightProjection;
 
-	ubo uniformBuffer;
+	UniformBuffer uniformBuffer;
 
-	/*************************************************THIS NEEDS EITHER REWORKING OR BOTH****************************************************/
-
-	/*YOU CHANGED THE SIGNS ON THE ROTATIONS< DUMBASS*/
-
-	/*Obtain the Light Space matrix for our Shadow map ??????*/
+	/*Reconstruct view and projection matrices for the shadowMapView*/
 	lightView = constructViewMatrix(shadowMapView);
 	lightProjection = constructProjectionMatrix(shadowMapView);
 
@@ -75,14 +72,12 @@ void RenderWidget::renderSceneObjects(const CameraView& cameraView, const Camera
 
 	copyMatrix4x4ToFloat16Array(lightSpaceMatrix, uniformBuffer.lightSpaceMatrix);
 
-	/****************************************************************************************************************************************/
-
 	/*Reset the matrices*/
 	model.setToIdentity();
 	view.setToIdentity();
 	projection.setToIdentity();
 
-	/*Reconstruct a new view matrix for the camera*/
+	/*Reconstruct matrices for both view and projection for the main camera view*/
 	view = constructViewMatrix(cameraView);
 	projection = constructProjectionMatrix(cameraView);
 
@@ -91,13 +86,13 @@ void RenderWidget::renderSceneObjects(const CameraView& cameraView, const Camera
 	/*Copy over the data into a valid buffer*/
 	copyMatrix4x4ToFloat16Array(model, uniformBuffer.model);
 	copyMatrix4x4ToFloat16Array(viewProjection, uniformBuffer.viewProjection);
-	copyVector4ToFloat4Array(lightDirection, uniformBuffer.toLightDirection);
+	copyVector4ToFloat4Array(g_toLightDirectionVector, uniformBuffer.toLightDirection);
 
 	m_shadowMappingShader.useShader();
 
 	/*Floor*/
 	glBindBuffer(GL_UNIFORM_BUFFER, m_uniformBuffer);
-	glBufferData(GL_UNIFORM_BUFFER, sizeof(ubo), &uniformBuffer, GL_STATIC_DRAW);
+	glBufferData(GL_UNIFORM_BUFFER, sizeof(UniformBuffer), &uniformBuffer, GL_STATIC_DRAW);
 
 	glBindVertexArray(m_floorMesh->m_meshVAO);
 	glDrawArrays(GL_TRIANGLES, 0, m_floorMesh->m_meshVertexCount);
@@ -109,7 +104,7 @@ void RenderWidget::renderSceneObjects(const CameraView& cameraView, const Camera
 	copyMatrix4x4ToFloat16Array(model, uniformBuffer.model);
 
 	glBindBuffer(GL_UNIFORM_BUFFER, m_uniformBuffer);
-	glBufferData(GL_UNIFORM_BUFFER, sizeof(ubo), &uniformBuffer, GL_STATIC_DRAW);
+	glBufferData(GL_UNIFORM_BUFFER, sizeof(UniformBuffer), &uniformBuffer, GL_STATIC_DRAW);
 
 	glBindVertexArray(m_wallMesh->m_meshVAO);
 	glDrawArrays(GL_TRIANGLES, 0, m_wallMesh->m_meshVertexCount);
@@ -136,12 +131,13 @@ void RenderWidget::renderSceneObjects(const CameraView& cameraView, const Camera
 	for (uint32_t cube = 0; cube < cubeTranslationVectors.size(); cube++)
 	{
 		model.setToIdentity();
-		model.scale(0.5f, 0.5f, 0.5f);
+		model.scale(0.5f, 0.5f, 0.5f); // Scaled down the cubes to half size, NOTE: This messes up the normals
 		model.translate(cubeTranslationVectors[cube]);
+
 		copyMatrix4x4ToFloat16Array(model, uniformBuffer.model);
 
 		glBindBuffer(GL_UNIFORM_BUFFER, m_uniformBuffer);
-		glBufferData(GL_UNIFORM_BUFFER, sizeof(ubo), &uniformBuffer, GL_STATIC_DRAW);
+		glBufferData(GL_UNIFORM_BUFFER, sizeof(UniformBuffer), &uniformBuffer, GL_STATIC_DRAW);
 
 		glDrawArrays(GL_TRIANGLES, 0, m_cubeMesh->m_meshVertexCount);
 	}
@@ -174,6 +170,7 @@ QMatrix4x4 RenderWidget::constructProjectionMatrix(const CameraView & view)
 
 	if (view.getCameraProjectionType() == ProjectionType::Orthographic)
 	{
+		/*Orthofraphic matrix properties*/
 		const float left = -(view.getCameraWidth() / 2.0f);
 		const float right = view.getCameraWidth() / 2.0f;
 		const float bottom = -(view.getCameraHeight() / 2.0f);
@@ -225,7 +222,7 @@ void RenderWidget::initializeGL()
 	glGenBuffers(1, &m_uniformBuffer);
 
 	glBindBuffer(GL_UNIFORM_BUFFER, m_uniformBuffer);
-	glBufferData(GL_UNIFORM_BUFFER, sizeof(ubo), NULL, GL_STATIC_DRAW);
+	glBufferData(GL_UNIFORM_BUFFER, sizeof(UniformBuffer), NULL, GL_STATIC_DRAW);
 	glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
 	glBindBufferBase(GL_UNIFORM_BUFFER, 0, m_uniformBuffer);
@@ -313,14 +310,14 @@ RenderWidget::RenderWidget()
 
 
 
-	const Orientation shadowViewOrientation = calculateShadowMapViewOrientation(lightDirection);
+	const Orientation shadowViewOrientation = calculateShadowMapViewOrientation(g_toLightDirectionVector);
 	const float shadowMapViewWidth = 40.0f;
 	const float shadowMapViewHeight = 40.0f;
 	const float shadowMapViewNearPlane = 0.1f;
 	const float shadowMapViewFarPlane = 50.0f;
 
 	m_shadowCameraView = new CameraView(QVector3D(17.0f, 25.0f, -5.0f), shadowViewOrientation, ProjectionType::Orthographic, shadowMapViewWidth,
-		shadowMapViewHeight, shadowMapViewNearPlane, shadowMapViewFarPlane); // Black magic
+		shadowMapViewHeight, shadowMapViewNearPlane, shadowMapViewFarPlane);
 
 	m_surfaceFormat = new QSurfaceFormat();
 

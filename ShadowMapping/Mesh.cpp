@@ -17,6 +17,7 @@ Mesh::Mesh(const std::vector<Vertex> data)
 
 	glBindBuffer(GL_ARRAY_BUFFER, m_meshVBO);
 
+
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), nullptr);
 	glEnableVertexAttribArray(0);
 

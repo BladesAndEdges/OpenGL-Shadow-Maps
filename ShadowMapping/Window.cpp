@@ -6,7 +6,6 @@ Window::Window()
 
 	resize(1200, 800);
 
-	//The layout of our window. It will only contain a single RenderWidget in it
 	m_windowLayout = new QGridLayout();
 
 	m_renderWidgetInstance = new RenderWidget();

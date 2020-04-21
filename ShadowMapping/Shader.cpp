@@ -77,7 +77,6 @@ void Shader::compileAndLinkShaders(const std::string& vertexShaderCode, const st
 
 	/*COMPILING FRAGMENT SHADER*/
 
-	/*The process is the same, so I've not commented it*/
 
 	/*Create empty shader objects*/
 	GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
@@ -103,14 +102,17 @@ void Shader::compileAndLinkShaders(const std::string& vertexShaderCode, const st
 	}
 
 	/*PROGRAM CREATION AND LINKING*/
+
 	m_programID = glCreateProgram();
 
+	/*Pass the shaders to the program*/
 	glAttachShader(m_programID, vertexShader);
 	glAttachShader(m_programID, fragmentShader);
 
 	glLinkProgram(m_programID);
 
 
+	/*Link the the shaders present in the program*/
 	GLint hasLinked = 0;
 	glGetProgramiv(m_programID, GL_LINK_STATUS, &hasLinked);
 
@@ -119,11 +121,13 @@ void Shader::compileAndLinkShaders(const std::string& vertexShaderCode, const st
 		glGetProgramInfoLog(m_programID, sizeof(error), NULL, error);
 	}
 
+	/*Once data has been given to the GPU, we do not need the shader objects anymore*/
 	glDeleteShader(vertexShader);
 	glDeleteShader(fragmentShader);
 
 }
 
+/*Have a single function do the entire set up for a shader module*/
 void Shader::setUpShader(const std::string & vertexShaderPath, const std::string & fragmentShaderPath)
 {
 	readShaderContents(vertexShaderPath, fragmentShaderPath);
