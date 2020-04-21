@@ -1,16 +1,12 @@
 #pragma once
 
 /*Represents an RGB colour structure*/
-class Colour
+struct Colour
 {
-
-public:
-
-	float m_red;
-	float m_green;
-	float m_blue;
+	float m_redChannel;
+	float m_greenChannel;
+	float m_blueChannel;
 
 	Colour();
 	Colour(float r, float g, float b);
 };
-

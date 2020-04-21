@@ -2,34 +2,32 @@
 
 Window::Window()
 {
-	/*General window stuff*/
-	setWindowTitle("Geometric Processing Coursework 2: Shadow Maps");
+	setWindowTitle("Shadow Mapping - Geometric Processing Coursework 2");
+
 	resize(1200, 800);
 
-	m_mainLayout = new QGridLayout();
+	//The layout of our window. It will only contain a single RenderWidget in it
+	layout = new QGridLayout();
 
-	m_renderWidget = new RenderWidget();
+	renderWidget = new RenderWidget();
+	layout->addWidget(renderWidget, 0, 0);
 
-	/*Add the widget to the layout*/
-	m_mainLayout->addWidget(m_renderWidget, 0, 0);
 
-	/*Set the layout as the window's main layout*/
-	setLayout(m_mainLayout);
+
+	setLayout(layout);
 }
 
 Window::~Window()
 {
-	delete m_renderWidget;
-	delete m_mainLayout;
+	delete(layout);
 }
 
-/*Getters for renderWidget and CameraView object*/
-RenderWidget * Window::getRenderWidgetInstance() const
+RenderWidget * Window::getRenderWidget() const
 {
-	return m_renderWidget;
+	return renderWidget;
 }
 
-CameraView * Window::getCameraViewInstance() const
+CameraView * Window::getCameraOFRenderWidget() const
 {
-	return m_renderWidget->getCameraViewObject();
+	return renderWidget->getCameraViewObject();
 }

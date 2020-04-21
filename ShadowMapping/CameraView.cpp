@@ -9,12 +9,12 @@ CameraView::CameraView()
 
 CameraView::CameraView(const QVector3D& position, const Orientation& orientation, const ProjectionType& projectionType,
 	float width, float height, float near, float far) : m_cameraWorldPosition(position),
-														m_cameraOrientation(orientation),
-														m_cameraProjectionType(projectionType),
-														m_cameraWidth(width),
-														m_cameraHeight(height),
-														m_cameraNearPlane(near),
-														m_cameraFarPlane(far)
+	m_cameraOrientation(orientation),
+	m_cameraProjectionType(projectionType),
+	m_cameraWidth(width),
+	m_cameraHeight(height),
+	m_cameraNearPlane(near),
+	m_cameraFarPlane(far)
 
 
 
@@ -37,7 +37,7 @@ ProjectionType CameraView::getCameraProjectionType() const
 	return m_cameraProjectionType;
 }
 
-void CameraView::setCameraPosition(const QVector3D & newCameraPosition)
+void CameraView::setCameraWorldPosition(const QVector3D & newCameraPosition)
 {
 	m_cameraWorldPosition = newCameraPosition;
 }
@@ -67,11 +67,21 @@ float CameraView::getCameraFarPlane() const
 	return m_cameraFarPlane;
 }
 
-float computeLightVectorMagnitude(const QVector4D & lightVector)
-{
-	return sqrtf(powf(lightVector.x(), 2.0f) + powf(lightVector.y(), 2.0f) + powf(lightVector.z(), 2.0f));
-}
-
+//QMatrix4x4 computeARotationMatrixAroundXAxis(float pitchAngleInRadians)
+//{
+//	return QMatrix4x4(	1.0f,	 0.0f,							0.0f,						0.0f, 
+//						0.0f,	 cosf(pitchAngleInRadians),	-sinf(pitchAngleInRadians),		0.0f, 
+//						0.0f,	sinf(pitchAngleInRadians),	cosf(pitchAngleInRadians),		0.0f,
+//						0.0f,	 0.0f,						 0.0f,							1.0f);
+//}
+//
+//QMatrix4x4 computeARotationMatrixAroundYAxis(float yawAngleInRadians)
+//{
+//	return QMatrix4x4(cosf(yawAngleInRadians), 0.0f, sinf(yawAngleInRadians), 0.0f,
+//		0.0f, 1.0f, 0.0f, 0.0f,
+//		-sinf(yawAngleInRadians),  0.0f, cosf(yawAngleInRadians), 0.0f,
+//		0.0f, 0.0f, 0.0f, 1.0f);
+//}
 
 Orientation calculateShadowMapViewOrientation(const QVector4D & lightDirection)
 {
@@ -95,4 +105,9 @@ Orientation calculateShadowMapViewOrientation(const QVector4D & lightDirection)
 
 	/*Compute */
 	return Orientation(pitchAngle, yawAngle, rollAngle);
+}
+
+float computeLightVectorMagnitude(const QVector4D & vector)
+{
+	return sqrtf(powf(vector.x(), 2.0f) + powf(vector.y(), 2.0f) + powf(vector.z(), 2.0f));
 }

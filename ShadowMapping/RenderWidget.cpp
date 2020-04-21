@@ -1,8 +1,18 @@
 #include "RenderWidget.h"
-#include <QDebug>
+#include <qdebug.h>
+#include <iostream>
+#include <qsurfaceformat.h>
+#include <qopenglcontext.h>
+#include <assert.h>
+#include <qmessagebox.h>
 
-/*Opengl function which will record errors returned by the API and output an error*/
-void RenderWidget::catchErrorMessage(GLenum error)
+//Math stuff
+#include <qmatrix4x4.h>
+const QVector3D worldUpVector(0.0f, 1.0f, 0.0f);
+const QVector4D lightDirection(1.0f, 1.0f, 1.0f, 0.0f);
+
+/*Opengl function which will record error's returned by the API and output an error*/
+void RenderWidget::catchOpenGLError(GLenum error)
 {
 	switch (error)
 	{
@@ -40,9 +50,10 @@ void RenderWidget::getOpenGLInformation()
 
 }
 
-/*This function made sense to be made, as we would be rendering the scene twice.*/
-void RenderWidget::renderSceneObjects(const CameraView& mainViewCamera, const CameraView& shadowViewCamera)
+void RenderWidget::renderSceneObjects(const CameraView& cameraView, const CameraView& shadowMapView)
 {
+	const QVector3D worldUp(0.0f, 1.0f, 0.0f);
+
 	QMatrix4x4 model;
 	QMatrix4x4 view;
 	QMatrix4x4 projection;
@@ -50,18 +61,21 @@ void RenderWidget::renderSceneObjects(const CameraView& mainViewCamera, const Ca
 	QMatrix4x4 lightView;
 	QMatrix4x4 lightProjection;
 
-	UniformBuffer uniformBuffer;
+	ubo uniformBuffer;
 
-	/*First construct the matrices for transforming into light space*/
-	lightView = constructViewMatrix(shadowViewCamera);
-	lightProjection = constructProjectionMatrix(shadowViewCamera);
+	/*************************************************THIS NEEDS EITHER REWORKING OR BOTH****************************************************/
 
-	/*Calculate a light space transformation matrix*/
+	/*YOU CHANGED THE SIGNS ON THE ROTATIONS< DUMBASS*/
+
+	/*Obtain the Light Space matrix for our Shadow map ??????*/
+	lightView = constructViewMatrix(shadowMapView);
+	lightProjection = constructProjectionMatrix(shadowMapView);
+
 	QMatrix4x4 lightSpaceMatrix = lightProjection * lightView;
 
-	/*Copy the data over to the UniformBuffer object*/
-	copyMatrix4x4ToFloatArray(lightSpaceMatrix, uniformBuffer.lightSpaceMatrix);
+	copyMatrixIntoFloatArray(lightSpaceMatrix, uniformBuffer.lightSpaceMatrix);
 
+	/****************************************************************************************************************************************/
 
 	/*Reset the matrices*/
 	model.setToIdentity();
@@ -69,39 +83,41 @@ void RenderWidget::renderSceneObjects(const CameraView& mainViewCamera, const Ca
 	projection.setToIdentity();
 
 	/*Reconstruct a new view matrix for the camera*/
-	view = constructViewMatrix(mainViewCamera);
-	projection = constructProjectionMatrix(mainViewCamera);
+	view = constructViewMatrix(cameraView);
+	projection = constructProjectionMatrix(cameraView);
 
 	QMatrix4x4 viewProjection = projection * view;
 
-	/*Copy over the data into the uniform buffer*/
-	copyMatrix4x4ToFloatArray(model, uniformBuffer.model);
-	copyMatrix4x4ToFloatArray(viewProjection, uniformBuffer.viewProjection);
-	copyVector4ToFloatArray(g_toLightSourceDirectionVector, uniformBuffer.toLightDirection);
+	/*Copy over the data into a valid buffer*/
+	copyMatrixIntoFloatArray(model, uniformBuffer.model);
+	copyMatrixIntoFloatArray(viewProjection, uniformBuffer.viewProjection);
+	copyVector4IntoFloatArray(lightDirection, uniformBuffer.toLightDirection);
 
 	m_shadowMappingShader.useShader();
 
-	/*The floor mesh*/
+	/*Floor*/
 	glBindBuffer(GL_UNIFORM_BUFFER, m_uniformBuffer);
-	glBufferData(GL_UNIFORM_BUFFER, sizeof(uniformBuffer), &uniformBuffer, GL_STATIC_DRAW);
+	glBufferData(GL_UNIFORM_BUFFER, sizeof(ubo), &uniformBuffer, GL_STATIC_DRAW);
 
 	glBindVertexArray(m_floorMesh->m_meshVAO);
-	glDrawArrays(GL_TRIANGLES, 0, m_floorMesh->m_vertexCount);
+	glDrawArrays(GL_TRIANGLES, 0, m_floorMesh->m_meshVertexCount);
 	glBindVertexArray(0);
 
-	/*The wall mesh*/
+	/*Wall*/
 	model.setToIdentity();
 	model.translate(QVector3D(0.0f, 0.0f, -20.0f));
-	copyMatrix4x4ToFloatArray(model, uniformBuffer.model); // We changed the model matrix, so we need to resend the data to update it
+	copyMatrixIntoFloatArray(model, uniformBuffer.model);
 
 	glBindBuffer(GL_UNIFORM_BUFFER, m_uniformBuffer);
-	glBufferData(GL_UNIFORM_BUFFER, sizeof(uniformBuffer), &uniformBuffer, GL_STATIC_DRAW);
+	glBufferData(GL_UNIFORM_BUFFER, sizeof(ubo), &uniformBuffer, GL_STATIC_DRAW);
 
 	glBindVertexArray(m_wallMesh->m_meshVAO);
-	glDrawArrays(GL_TRIANGLES, 0, m_wallMesh->m_vertexCount);
+	glDrawArrays(GL_TRIANGLES, 0, m_wallMesh->m_meshVertexCount);
 	glBindVertexArray(0);
 
-	/*Translation vectors for cube positions*/
+
+	/*Cubes*/
+
 	const std::vector<QVector3D> cubeTranslationVectors =
 	{
 		QVector3D(5.0f, 8.0f, -8.0f),
@@ -117,19 +133,17 @@ void RenderWidget::renderSceneObjects(const CameraView& mainViewCamera, const Ca
 	};
 
 	glBindVertexArray(m_cubeMesh->m_meshVAO);
-
-	/*For the amount of cubes we want to render*/
 	for (uint32_t cube = 0; cube < cubeTranslationVectors.size(); cube++)
 	{
 		model.setToIdentity();
-		model.scale(0.5f, 0.5f, 0.5f); // Scale the cubes down to half size. Note this messes up our normals!
+		model.scale(0.5f, 0.5f, 0.5f);
 		model.translate(cubeTranslationVectors[cube]);
-		copyMatrix4x4ToFloatArray(model, uniformBuffer.model);
+		copyMatrixIntoFloatArray(model, uniformBuffer.model);
 
 		glBindBuffer(GL_UNIFORM_BUFFER, m_uniformBuffer);
-		glBufferData(GL_UNIFORM_BUFFER, sizeof(uniformBuffer), &uniformBuffer, GL_STATIC_DRAW);
+		glBufferData(GL_UNIFORM_BUFFER, sizeof(ubo), &uniformBuffer, GL_STATIC_DRAW);
 
-		glDrawArrays(GL_TRIANGLES, 0, m_cubeMesh->m_vertexCount);
+		glDrawArrays(GL_TRIANGLES, 0, m_cubeMesh->m_meshVertexCount);
 	}
 	glBindVertexArray(0);
 }
@@ -143,9 +157,9 @@ QMatrix4x4 RenderWidget::constructViewMatrix(const CameraView & view)
 	result.setToIdentity();
 
 	/*First apply rotation*/
-	result.rotate(view.getCameraOrientation().getPitchValue(), QVector3D(1.0f, 0.0f, 0.0f)); // Ask George about this part
-	result.rotate(-view.getCameraOrientation().getYawValue(), QVector3D(0.0f, 1.0f, 0.0f));
-	result.rotate(-view.getCameraOrientation().getRollValue(), QVector3D(0.0f, 0.0f, 1.0f));
+	result.rotate(view.getCameraOrientation().getPitchAngle(), QVector3D(1.0f, 0.0f, 0.0f)); // Ask George about this part
+	result.rotate(-view.getCameraOrientation().getYawAngle(), QVector3D(0.0f, 1.0f, 0.0f));
+	result.rotate(-view.getCameraOrientation().getRollAngle(), QVector3D(0.0f, 0.0f, 1.0f));
 
 	/*Then translation...*/
 	result.translate(-view.getCameraWorldPosition());
@@ -158,7 +172,6 @@ QMatrix4x4 RenderWidget::constructProjectionMatrix(const CameraView & view)
 	QMatrix4x4 result;
 	result.setToIdentity();
 
-	/*Construct an Orthographic projection matrix. Used by the directional light source*/
 	if (view.getCameraProjectionType() == ProjectionType::Orthographic)
 	{
 		const float left = -(view.getCameraWidth() / 2.0f);
@@ -168,7 +181,6 @@ QMatrix4x4 RenderWidget::constructProjectionMatrix(const CameraView & view)
 
 		result.ortho(left, right, bottom, top, view.getCameraNearPlane(), view.getCameraFarPlane());
 	}
-	/*Construct a perspective projection matrix, used by the main camera view*/
 	if (view.getCameraProjectionType() == ProjectionType::Perspective)
 	{
 		result.perspective(45.0f, view.getCameraWidth() / view.getCameraHeight(), view.getCameraNearPlane(), view.getCameraFarPlane());
@@ -181,6 +193,9 @@ void RenderWidget::initializeGL()
 {
 	/*Initalizes openGL functions in QT ( Most likely simply loads up all the function pointers)*/
 	initializeOpenGLFunctions();
+
+	std::string path = "Textures/Eagle.png";
+	m_eagleTexture = new TextureObject(path, GL_NEAREST);
 
 	/*This functions was created to see information about Versions used*/
 	//getOpenGLInformation();
@@ -199,7 +214,7 @@ void RenderWidget::initializeGL()
 	m_debuggingShader.setUpShader(debugVertexShader, debugFragmentShader);
 	m_shadowMappingShader.setUpShader(simpleVertexShader, simpleFragmentShader);
 
-	m_debuggingQuadMesh = Mesh::createDebugQuadMesh();
+	m_debugQuadMesh = Mesh::createDebugQuadMesh();
 	m_floorMesh = Mesh::createFloorMesh();
 	m_wallMesh = Mesh::createWallMesh();
 	m_cubeMesh = Mesh::createCubeMesh();
@@ -210,7 +225,7 @@ void RenderWidget::initializeGL()
 	glGenBuffers(1, &m_uniformBuffer);
 
 	glBindBuffer(GL_UNIFORM_BUFFER, m_uniformBuffer);
-	glBufferData(GL_UNIFORM_BUFFER, sizeof(UniformBuffer), NULL, GL_STATIC_DRAW);
+	glBufferData(GL_UNIFORM_BUFFER, sizeof(ubo), NULL, GL_STATIC_DRAW);
 	glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
 	glBindBufferBase(GL_UNIFORM_BUFFER, 0, m_uniformBuffer);
@@ -231,55 +246,45 @@ void RenderWidget::resizeGL(int w, int h)
 
 void RenderWidget::paintGL()
 {
-	/*Clear screen to Orange*/
 	glClearColor(1.0f, 0.5f, 0.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	/*Generate a shadow map texture. Initially, it is empty*/
+	///*The shadow map*/
+
 	glGenTextures(1, &m_shadowMapTexture);
 	glBindTexture(GL_TEXTURE_2D, m_shadowMapTexture);
 
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, 512, 512, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
 
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-	/*Retrieve information form the depth attachment of the framebuffer, and store it in the shadow map texture*/
 	glBindFramebuffer(GL_FRAMEBUFFER, m_shadowMapFramebuffer);
 	glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, m_shadowMapTexture, 0);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-	/*Set the viewport to the dimensions of the shadow map*/
 	glViewport(0, 0, 512, 512);
-
 	glBindFramebuffer(GL_FRAMEBUFFER, m_shadowMapFramebuffer);
 	glClear(GL_DEPTH_BUFFER_BIT);
+	renderSceneObjects(*m_shadowCameraView, *m_shadowCameraView);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-	/*Render scene from the light source's view, and record the depth values*/
-	renderSceneObjects(*m_shadowViewCamera, *m_shadowViewCamera);
-
-	glBindFramebuffer(GL_FRAMEBUFFER, 0); // Unbind the framebuffer object
-
-	/*Bind the default framebuffer provided by Qt*/
 	glBindFramebuffer(GL_FRAMEBUFFER, this->defaultFramebufferObject());
 
 	glClearColor(1.0f, 0.5f, 0.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 
-	glViewport(0, 0, m_mainViewCamera->getCameraWidth(), m_mainViewCamera->getCameraHeight());
-
-	/*Bind the shadow map texture*/
+	glViewport(0, 0, m_mainCameraView->getCameraWidth(), m_mainCameraView->getCameraHeight());
 	glBindTexture(GL_TEXTURE_2D, m_shadowMapTexture);
-	renderSceneObjects(*m_mainViewCamera, *m_shadowViewCamera);
+	renderSceneObjects(*m_mainCameraView, *m_shadowCameraView);
 
-	/*Use the shadow map to apply it onto a Quad, for debugging purposes*/
 	m_debuggingShader.useShader();
 	glBindTexture(GL_TEXTURE_2D, m_shadowMapTexture);
-	glBindVertexArray(m_debuggingQuadMesh->m_meshVAO);
-	glDrawArrays(GL_TRIANGLES, 0, m_debuggingQuadMesh->m_vertexCount);
+	glBindVertexArray(m_debugQuadMesh->m_meshVAO);
+	glDrawArrays(GL_TRIANGLES, 0, m_debugQuadMesh->m_meshVertexCount);
 	glBindVertexArray(0);
 
 	/*Initially we set the flag to indicate no error is present*/
@@ -294,7 +299,7 @@ void RenderWidget::paintGL()
 		if (error != GL_NO_ERROR)
 		{
 			/*Process the error message*/
-			catchErrorMessage(error);
+			catchOpenGLError(error);
 		}
 
 		/*Do this while an error is present*/
@@ -304,16 +309,17 @@ void RenderWidget::paintGL()
 RenderWidget::RenderWidget()
 {
 
-	m_mainViewCamera = new CameraView(QVector3D(0.0f, 0.f, 0.0f), Orientation(0.0f, 0.0f, 0.0f), ProjectionType::Perspective, 1200, 800, 0.1f, 1000.0f);
+	m_mainCameraView = new CameraView(QVector3D(0.0f, 0.f, 0.0f), Orientation(0.0f, 0.0f, 0.0f), ProjectionType::Perspective, 1200, 800, 0.1f, 1000.0f);
 
-	/*Compute the orientation the shadow map view must have in order to see the scene*/
-	const Orientation shadowViewOrientation = calculateShadowMapViewOrientation(g_toLightSourceDirectionVector);
+
+
+	const Orientation shadowViewOrientation = calculateShadowMapViewOrientation(lightDirection);
 	const float shadowMapViewWidth = 40.0f;
 	const float shadowMapViewHeight = 40.0f;
 	const float shadowMapViewNearPlane = 0.1f;
 	const float shadowMapViewFarPlane = 50.0f;
 
-	m_shadowViewCamera = new CameraView(QVector3D(17.0f, 25.0f, -5.0f), shadowViewOrientation, ProjectionType::Orthographic, shadowMapViewWidth,
+	m_shadowCameraView = new CameraView(QVector3D(17.0f, 25.0f, -5.0f), shadowViewOrientation, ProjectionType::Orthographic, shadowMapViewWidth,
 		shadowMapViewHeight, shadowMapViewNearPlane, shadowMapViewFarPlane); // Black magic
 
 	m_surfaceFormat = new QSurfaceFormat();
@@ -337,5 +343,5 @@ RenderWidget::~RenderWidget()
 
 CameraView * RenderWidget::getCameraViewObject() const
 {
-	return m_mainViewCamera;
+	return m_mainCameraView;
 }

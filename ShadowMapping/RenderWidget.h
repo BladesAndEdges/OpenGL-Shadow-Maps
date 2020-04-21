@@ -23,45 +23,36 @@ it not only gives us inherited methods, that we use as OpenGL functions, but it 
 #include "Mesh.h"
 #include "TextureObject.h"
 
-#include<QOpenGLWidget>
-#include<QSurfaceformat>
-#include<assert.h>
-#include<QMessageBox>
 
-#include<QMatrix4x4>
-
-/*Global variables*/
-const QVector3D g_worldUpVector(0.0f, 1.0f, 0.0f);
-const QVector4D g_toLightSourceDirectionVector(1.0f, 1.0f, 1.0f, 0.0f); // Direction the sun is located in, from the scene
+/*The main rendering class. This class creates an OpenGL context and then we use Qt wrappers to load in and use the neccessary OpenGL functions*/
 
 class RenderWidget : public QOpenGLWidget, protected QOpenGLFunctions_4_5_Core
 {
 
 private:
 
-	TextureObject* texture;
-
 	GLuint m_uniformBuffer;
 	GLuint m_shadowMapFramebuffer;
-
 	GLuint m_shadowMapTexture;
 
 	QSurfaceFormat* m_surfaceFormat;
 
-	Shader m_shadowMappingShader; // Shader where the actual Shadow Mapping is done
-	Shader m_debuggingShader; // Shader which we use to output the depth map to a quad
+	Shader m_shadowMappingShader;
+	Shader m_debuggingShader;
 
-	CameraView* m_mainViewCamera;
-	CameraView* m_shadowViewCamera; // As seen from the light source
+	CameraView* m_mainCameraView;
+	CameraView* m_shadowCameraView;
 
-	Mesh* m_debuggingQuadMesh;
+	Mesh* m_debugQuadMesh;
 	Mesh* m_floorMesh;
 	Mesh* m_wallMesh;
 	Mesh* m_cubeMesh;
 
-	void catchErrorMessage(GLenum errorCode);
+	TextureObject* m_eagleTexture;
+
+	void catchOpenGLError(GLenum errorCode);
 	void getOpenGLInformation();
-	void renderSceneObjects(const CameraView& mainViewCamera, const CameraView& shadowViewCamera);
+	void renderSceneObjects(const CameraView& cameraView, const CameraView& shadowViewMap);
 
 	QMatrix4x4 constructViewMatrix(const CameraView& view);
 	QMatrix4x4 constructProjectionMatrix(const CameraView& view);

@@ -1,28 +1,28 @@
 #pragma once
-
-#include<QWidget>
-#include<QGridLayout> // Allows Qt grid layout structure for widgets
+#include <qwidget.h>
+#include <qgridlayout.h>
 
 #include "RenderWidget.h"
 
-/*
-	This class represents our main window.
-*/
+/*A big portion of how to set up proper debugging using Qt5 was referenced from https://www.trentreed.net/blog/qt5-opengl-part-5-debug-logging/ */
+class QOpenGLDebugMessage;
+class QOpenGLDebugLogger;
+
 
 class Window : public QWidget
 {
 
 private:
 
-	QGridLayout* m_mainLayout;
-	RenderWidget* m_renderWidget;
+	QGridLayout* layout;
+	RenderWidget* renderWidget;
 
 public:
 
-	Window();
+	Window::Window();
 	~Window();
 
-	RenderWidget* getRenderWidgetInstance() const;
-	CameraView* getCameraViewInstance() const;
+	RenderWidget* getRenderWidget() const;
+	CameraView* getCameraOFRenderWidget() const;
 };
 

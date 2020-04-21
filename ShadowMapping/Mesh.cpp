@@ -1,11 +1,11 @@
 #include "Mesh.h"
 
-Mesh::Mesh(const std::vector<Vertex>& data)
+Mesh::Mesh(const std::vector<Vertex> data)
 {
 	initializeOpenGLFunctions();
 
-	m_vertexCount = data.size();
-	const uint32_t dataRequirementsInBytes = m_vertexCount * sizeof(Vertex);
+	m_meshVertexCount = data.size();
+	const uint32_t dataRequirementsInBytes = m_meshVertexCount * sizeof(Vertex);
 
 	glGenVertexArrays(1, &m_meshVAO);
 	glBindVertexArray(m_meshVAO);
@@ -72,7 +72,7 @@ Mesh* Mesh::createFloorMesh()
 
 	std::vector<Vertex> vertices;
 
-	Vector3 positiveYVector3(0.0f, 1.0f, 0.0f);
+	Vector3 positiveYNormal(0.0f, 1.0f, 0.0f);
 
 	Vector3 topLeft(0.0f, 0.0f, -20.0f);
 	Vector3 bottomLeft(0.0f, 0.0f, 0.0f);
@@ -84,10 +84,10 @@ Mesh* Mesh::createFloorMesh()
 	Colour yellow(1.0f, 1.0f, 0.0f);
 	Colour cyan(0.5f, 1.0f, 1.0f);
 
-	Vertex v0(topLeft, forestGreen, positiveYVector3);
-	Vertex v1(bottomLeft, purple, positiveYVector3);
-	Vertex v2(bottomRight, yellow, positiveYVector3);
-	Vertex v3(topRight, cyan, positiveYVector3);
+	Vertex v0(topLeft, forestGreen, positiveYNormal);
+	Vertex v1(bottomLeft, purple, positiveYNormal);
+	Vertex v2(bottomRight, yellow, positiveYNormal);
+	Vertex v3(topRight, cyan, positiveYNormal);
 
 	vertices.push_back(v0);
 	vertices.push_back(v1);
@@ -108,7 +108,7 @@ Mesh* Mesh::createWallMesh()
 
 	std::vector<Vertex> vertices;
 
-	Vector3 positiveZVector3(0.0f, 0.0f, 1.0f);
+	Vector3 positiveZNormal(0.0f, 0.0f, 1.0f);
 
 	Vector3 topLeft(0.0f, 20.0f, 0.0f);
 	Vector3 bottomLeft(0.0f, 0.0f, 0.0f);
@@ -120,10 +120,10 @@ Mesh* Mesh::createWallMesh()
 	Colour blue(0.0f, 0.0f, 1.0f);
 	Colour black(1.0f, 1.0f, 1.0f);
 
-	Vertex v0(topLeft, red, positiveZVector3);
-	Vertex v1(bottomLeft, green, positiveZVector3);
-	Vertex v2(bottomRight, blue, positiveZVector3);
-	Vertex v3(topRight, black, positiveZVector3);
+	Vertex v0(topLeft, red, positiveZNormal);
+	Vertex v1(bottomLeft, green, positiveZNormal);
+	Vertex v2(bottomRight, blue, positiveZNormal);
+	Vertex v3(topRight, black, positiveZNormal);
 
 	vertices.push_back(v0);
 	vertices.push_back(v1);
@@ -142,7 +142,7 @@ Mesh* Mesh::createCubeMesh()
 {
 	std::vector<Vertex> vertices;
 
-	/*Vector3s*/
+	/*Normals*/
 	Vector3 pointingPositiveX(1.0f, 0.0f, 0.0f);
 	Vector3 pointingNegativeX(-1.0f, 0.0f, 0.0f);
 

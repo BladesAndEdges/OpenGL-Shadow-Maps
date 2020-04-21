@@ -4,36 +4,36 @@ Orientation::Orientation()
 {
 }
 
-Orientation::Orientation(float pitch, float yaw, float roll) : m_pitch(pitch), m_yaw(yaw), m_roll(roll)
+Orientation::Orientation(float pitchAngle, float yawAngle, float rollAngle) : m_pitchAngle(pitchAngle), m_yawAngle(yawAngle), m_rollAngle(rollAngle)
 {
 }
 
-float Orientation::getPitchValue() const
+float Orientation::getPitchAngle() const
 {
-	return m_pitch;
+	return m_pitchAngle;
 }
 
-float Orientation::getYawValue() const
+float Orientation::getYawAngle() const
 {
-	return m_yaw;
+	return m_yawAngle;
 }
 
-float Orientation::getRollValue() const
+float Orientation::getRollAngle() const
 {
-	return m_roll;
+	return m_rollAngle;
 }
 
-void Orientation::setPitchValue(float newPitchValue)
+void Orientation::setPitchAngle(float newPitch)
 {
-	m_pitch = newPitchValue;
+	m_pitchAngle = newPitch;
 }
 
-void Orientation::setYawValue(float newYawValue)
+void Orientation::setYawAngle(float newYaw)
 {
-	m_yaw = newYawValue;
+	m_yawAngle = newYaw;
 }
 
-void Orientation::setRollValue(float newRollValue)
+void Orientation::setRollAngle(float newRoll)
 {
-	m_roll = newRollValue;
+	m_rollAngle = newRoll;
 }

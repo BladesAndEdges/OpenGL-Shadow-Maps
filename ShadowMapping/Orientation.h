@@ -1,34 +1,32 @@
 #pragma once
 
-#include<QMatrix4x4>
+#include <qmatrix4x4.h>
 
 /*
 	This class represents a CameraView orientation.
 	It uses Euler angles to express which way the CameraView
 	object is currently facing in the scene.
 */
-class Orientation
+struct Orientation
 {
 
 private:
 
-	float m_pitch;
-	float m_yaw;
-	float m_roll;
+	float m_pitchAngle;
+	float m_yawAngle;
+	float m_rollAngle;
 
 public:
 
 	Orientation();
-	Orientation(float pitch, float yaw, float roll);
+	Orientation(float pitchAngle, float yawAngle, float rollAngle);
 
-	/*Getters*/
-	float getPitchValue() const;
-	float getYawValue() const;
-	float getRollValue() const;
+	float getPitchAngle() const;
+	float getYawAngle() const;
+	float getRollAngle() const;
 
-	/*Setters*/
-	void setPitchValue(float newPitchValue);
-	void setYawValue(float newYawValue);
-	void setRollValue(float newRollValue);
+	void setPitchAngle(float newPitch);
+	void setYawAngle(float newYaw);
+	void setRollAngle(float newRoll);
 };
 

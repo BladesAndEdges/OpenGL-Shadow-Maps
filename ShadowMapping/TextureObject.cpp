@@ -1,49 +1,50 @@
 #include "TextureObject.h"
 
-TextureObject::TextureObject(const std::string & file, GLint textureParameter)
-{
-	initializeOpenGLFunctions();
+TextureObject::TextureObject(const std::string& file, GLint param) {
 
-	QImage imageFile;
-	QImage imageFileInGLFormat;
+	//For loading and converting
+	QImage img, glformat;
 
-	if (!imageFile.load(QString::fromStdString(file.c_str())))
-	{
-
+	if (!img.load(QString::fromStdString(file.c_str()))) {
+		OutputDebugStringA("Asdasd");
 	}
 
 	initializeOpenGLFunctions();
 
-	/*Qt expects a certain format*/
-	imageFileInGLFormat = QGLWidget::convertToGLFormat(imageFile);
+	//If file could not be loaded
 
-	/*Generate a texture Id*/
-	glGenTextures(GL_TEXTURE_2D, &m_textureID);
+	//Convert to accepted GL format
+	glformat = QGLWidget::convertToGLFormat(img);
 
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, imageFileInGLFormat.width(), imageFileInGLFormat.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, imageFileInGLFormat.bits());
+	//Generate name/id
+	glGenTextures(1, &textureID);
+	glBindTexture(GL_TEXTURE_2D, textureID);
 
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	//Apply texture
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, glformat.width(), glformat.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, glformat.bits());
+
+
+	//Wrap modes, min-mag filter
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, param);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, param);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
 }
 
-TextureObject::~TextureObject()
-{
-	glDeleteTextures(1, &m_textureID);
+//Destructor(???) test
+TextureObject::~TextureObject() {
+	glDeleteTextures(1, &textureID);
 }
 
-void TextureObject::setActiveTextureObject()
-{
-	glBindTexture(GL_TEXTURE_2D, m_textureID);
-}
-
-GLuint TextureObject::getWidth() const
-{
+unsigned int TextureObject::getWidth() {
 	return m_textureWidth;
 }
 
-GLuint TextureObject::getHeight() const
-{
-	return m_textureHeight;
+unsigned int TextureObject::getHeight() {
+	return height;
+}
+
+void TextureObject::setActiveTexture() {
+	glBindTexture(GL_TEXTURE_2D, textureID);
 }

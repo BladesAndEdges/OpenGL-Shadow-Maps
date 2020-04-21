@@ -6,7 +6,7 @@
 
 InputController::InputController(Window * window) : m_windowWidget(window), m_mouseIsPressed(false)
 {
-	m_cameraViewObject = m_windowWidget->getCameraViewInstance();
+	m_cameraObject = m_windowWidget->getCameraOFRenderWidget();
 }
 
 bool InputController::eventFilter(QObject * object, QEvent * theEvent)
@@ -16,24 +16,24 @@ bool InputController::eventFilter(QObject * object, QEvent * theEvent)
 	{
 		return false;
 	}
-	else if (object == m_windowWidget->getRenderWidgetInstance() && theEvent->type() == QEvent::KeyPress)
+	else if (object == m_windowWidget->getRenderWidget() && theEvent->type() == QEvent::KeyPress)
 	{
 		keyPressEvent(static_cast<QKeyEvent*>(theEvent));
 		return false;
 	}
-	else if (object == m_windowWidget->getRenderWidgetInstance() && theEvent->type() == QEvent::MouseButtonPress)
+	else if (object == m_windowWidget->getRenderWidget() && theEvent->type() == QEvent::MouseButtonPress)
 	{
 		mousePressEvent(static_cast<QMouseEvent*>(theEvent));
 		return false;
 
 	}
-	else if (object == m_windowWidget->getRenderWidgetInstance() && theEvent->type() == QEvent::MouseButtonRelease)
+	else if (object == m_windowWidget->getRenderWidget() && theEvent->type() == QEvent::MouseButtonRelease)
 	{
 		mouseReleaseEvent(static_cast<QMouseEvent*>(theEvent));
 		return false;
 
 	}
-	else if (object == m_windowWidget->getRenderWidgetInstance() && theEvent->type() == QEvent::MouseMove)
+	else if (object == m_windowWidget->getRenderWidget() && theEvent->type() == QEvent::MouseMove)
 	{
 		mouseMoveEvent(static_cast<QMouseEvent*>(theEvent));
 		return false;
@@ -45,7 +45,7 @@ bool InputController::eventFilter(QObject * object, QEvent * theEvent)
 
 void InputController::keyPressEvent(QKeyEvent * keyEvent)
 {
-	QVector3D currentPosition = m_cameraViewObject->getCameraWorldPosition();
+	QVector3D currentPosition = m_cameraObject->getCameraWorldPosition();
 	QVector3D translation = QVector3D(0.0f, 0.0f, 0.f);
 
 	QVector3D rightwardVector = QVector3D(1.0f, 0.0f, 0.0f);
@@ -53,14 +53,14 @@ void InputController::keyPressEvent(QKeyEvent * keyEvent)
 	QVector3D forwardVector = QVector3D(0.0f, 0.0f, 1.0f);
 	const float cameraSpeed = 0.1f;
 
-	float currentPitchAngle = m_cameraViewObject->getCameraOrientation().getPitchValue();
-	float currentYawAngle = m_cameraViewObject->getCameraOrientation().getYawValue();
+	float currentPitchAngle = m_cameraObject->getCameraOrientation().getPitchAngle();
+	float currentYawAngle = m_cameraObject->getCameraOrientation().getYawAngle();
 
 	/*Convert the angles to radians, as the mathematical functions require it*/
 	float currentPitchInRadians = currentPitchAngle * (M_PI / 180.0f);
 	float currentYawInRadians = currentYawInRadians * (M_PI / 180.0f);
 
-	/*Sets up the tranlsation for the m_cameraViewObject!*/
+	/*Sets up the tranlsation for the CameraObject!*/
 	switch (keyEvent->key())
 	{
 	case Qt::Key_W:
@@ -95,12 +95,12 @@ void InputController::keyPressEvent(QKeyEvent * keyEvent)
 
 	translation = accountForPitchRotation * accountForYawRotation * translation;
 
-	/*Since the above translation is set up for the m_cameraViewObject, corresponding matrix,
+	/*Since the above translation is set up for the CameraObject, corresponding matrix,
 	that would be applied to the scene, would be the inverse*/
 	QVector3D newCameraPosition = currentPosition + translation;
-	m_cameraViewObject->setCameraPosition(newCameraPosition);
+	m_cameraObject->setCameraWorldPosition(newCameraPosition);
 
-	m_windowWidget->getRenderWidgetInstance()->repaint();
+	m_windowWidget->getRenderWidget()->repaint();
 }
 
 void InputController::mousePressEvent(QMouseEvent * mousePressEvent)
@@ -110,8 +110,8 @@ void InputController::mousePressEvent(QMouseEvent * mousePressEvent)
 		m_mouseIsPressed = true;
 	}
 
-	m_oldXPosition = mousePressEvent->pos().x();
-	m_oldYPosition = mousePressEvent->pos().y();
+	m_previousXCoordinate = mousePressEvent->pos().x();
+	m_previousYCoordinate = mousePressEvent->pos().y();
 }
 
 void InputController::mouseMoveEvent(QMouseEvent * mouseMoveEvent)
@@ -125,13 +125,13 @@ void InputController::mouseMoveEvent(QMouseEvent * mouseMoveEvent)
 
 		/*Gets the current orientation of the camera for the yaw and pitch. We will not include roll maneuveres,
 		so we leave that out*/
-		float currentPitch = m_cameraViewObject->getCameraOrientation().getPitchValue();
-		float currentYaw = m_cameraViewObject->getCameraOrientation().getYawValue();
+		float currentPitch = m_cameraObject->getCameraOrientation().getPitchAngle();
+		float currentYaw = m_cameraObject->getCameraOrientation().getYawAngle();
 		float currentRoll = 0.0f;
 
 		/*Differences between the cursor locations*/
-		float differenceAlongX = (newPositionInX - m_oldXPosition);
-		float differenceAlongY = (newPositionInY - m_oldYPosition);
+		float differenceAlongX = (newPositionInX - m_previousXCoordinate);
+		float differenceAlongY = (newPositionInY - m_previousYCoordinate);
 
 		currentPitch = currentPitch + (differenceAlongY * rotationSpeed);
 		currentYaw = currentYaw + (-differenceAlongX * rotationSpeed);
@@ -149,13 +149,13 @@ void InputController::mouseMoveEvent(QMouseEvent * mouseMoveEvent)
 		Orientation updatedCameraOrientation(currentPitch, currentYaw, currentRoll);
 
 		/*And set it as the new orientation*/
-		m_cameraViewObject->setCameraOrientation(updatedCameraOrientation);
+		m_cameraObject->setCameraOrientation(updatedCameraOrientation);
 
 		/*Update the screen*/
-		m_windowWidget->getRenderWidgetInstance()->repaint();
+		m_windowWidget->getRenderWidget()->repaint();
 
-		m_oldXPosition = newPositionInX;
-		m_oldYPosition = newPositionInY;
+		m_previousXCoordinate = newPositionInX;
+		m_previousYCoordinate = newPositionInY;
 	}
 
 }
